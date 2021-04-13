@@ -77,7 +77,7 @@ router.delete("/courses/:id/delete", coursesController.delete, coursesController
 
 router.get("/users", usersController.index, usersController.indexView);
 router.get("/users/new", usersController.new);
-router.post("/users/create",usersController.create, usersController.redirectView);
+router.post("/users/create",usersController.validate, usersController.create, usersController.redirectView);
 router.get("/users/:id", usersController.show, usersController.showView);
 router.get("/users/:id/edit", usersController.edit);
 router.put("/users/:id/update", usersController.update,usersController.redirectView);

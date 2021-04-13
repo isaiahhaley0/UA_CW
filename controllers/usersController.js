@@ -34,21 +34,44 @@ module.exports = {
         res.render("users/new")
     },
     create: (req, res, next) => {
+        if(req.skip) return next();
         let userParams = getUserParams(req.body);
 
-        
+        let newUser = new User(userParams);
 
-        user.create(userParams)
-            .then(user => {
 
-                res.locals.redirect = "/users";
-                res.locals.user = user;
+        User.register(newUser, req.body.password, (error,user)=>{
+            if(user) {
+                req.flash("success", "User account successfully created");
+                res.locals.redirect="/users";
                 next();
-            })
-            .catch(error => {
-                console.log(`Error saving user: ${error.message}`)
-                next(error);
-            })
+            }
+            else{
+                req.flash("error", `Failed to create user account ${error.message}`);
+                res.locals.redirect="/useers/new";
+                next();
+            }
+            });
+
+    },
+    validate: (req, res, next) =>{
+        req.sanitizeBody("email").normalizeEmail({
+            all_lowercase: true
+        }).trim();
+
+        req.check("email","email is not valid!").isEmail();
+        req.check("zipCode","Zip Code Is Not Valid").notEmpty().isInt().isLength({min:5,max:5});
+        req.check("password","Password can not be empty")
+
+        req.getValidationResult().then((error)=>{if(!error.isEmpty()){
+            let messages = error.array().map (e => e.msg);
+            req.flash("error",messages.join(" and "));
+            req.skip = true;
+            res.local.redirect = "/users/new";
+            next();
+        }
+        else next();
+        })
     },
     redirectView: (req, res, next) => {
         let redirectPath = res.locals.redirect;
