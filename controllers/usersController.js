@@ -34,19 +34,15 @@ module.exports = {
         res.render("users/new")
     },
     create: (req, res, next) => {
-        let newUser = new User({
+        let userParams = getUserParams(req.body);
 
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
+        
 
-            email: req.body.email,
-            zipCode: req.body.zipCode,
-            password: req.body.password
-        });
-        user.create(newUser)
+        user.create(userParams)
             .then(user => {
-                res.locals.user = user;
+
                 res.locals.redirect = "/users";
+                res.locals.user = user;
                 next();
             })
             .catch(error => {
