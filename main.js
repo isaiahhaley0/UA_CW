@@ -8,7 +8,17 @@ usersController = require("./controllers/usersController"),
 coursesController = require("./controllers/coursesController"),
 methodOverride = require("method-override"),
 layouts = require("express-ejs-layouts"),
-mongoose = require("mongoose");
+mongoose = require("mongoose"),
+
+passport = require("passport"),
+    cookieParser = require("cookie-parser"),
+    expressSession = require("express-session"),
+    expressValidator = require("express-validator"),
+    connectFlash = require("connect-flash"),
+    User = require("./models/user");
+
+
+
 
 mongoose.connect("mongodb://localhost:27017/confetti_cuisine",{useNewUrlParser: true, useUnifiedTopology: true })
 
@@ -17,7 +27,7 @@ app.set("port",process.env.PORT||3000);
 app.set("view engine", "ejs");
 router.use(layouts);
 
-
+router.use(methodOverride("_method",{methods: ["POST","GET"]}));
 
 router.use(express.static("public"))
 app.use(
@@ -26,12 +36,35 @@ app.use(
     })
 );
 router.use(express.json());
-router.use(methodOverride("_method",{methods: ["POST","GET"]}));
+
+router.use(cookieParser("my_passcode"));
+router.use(expressSession({
+    secret: "my_passcode",
+    cookie:{
+        maxAge: 360000
+    },
+    resave: false,
+    saveUninitialized: false
+}));
+
+router.use(passport.initialize());
+router.use(passport.session());
+passport.use(User.createStrategy);
+passport.serializeUser(User.serializeUser);
+passport.deserializeUser(User.deserializeUser);
+
+
 router.get("/", homeController.index);
 
 router.get("/courses", coursesController.index, coursesController.indexView);
 router.get("/courses/new", coursesController.new);
 router.post("/courses/create", coursesController.create, coursesController.redirectView);
+
+router.get("/users/login", usersController.login);
+router.post("/users/login", usersController.authenticate)
+
+router.get("/users/logout", usersController.logout, usersController.redirectView)
+
 router.get("/courses/:id", coursesController.show, coursesController.showView);
 router.get("/courses/:id/edit", coursesController.edit);
 router.put("/courses/:id/update", coursesController.update, coursesController.redirectView);

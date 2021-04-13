@@ -18,7 +18,7 @@ courseSchema = new Schema(
             min: [0, "Course can not have a negative number of students"]
         },
         cost:{
-            type: Nuumber,
+            type: Number,
             efault: 0,
             min: [0, "Cost cannot be negative"]
         }
