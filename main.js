@@ -23,13 +23,15 @@ passport = require("passport"),
 mongoose.connect("mongodb://localhost:27017/confetti_cuisine",{useNewUrlParser: true, useUnifiedTopology: true })
 
 app.set("port",process.env.PORT||3000);
-
+mongoose.set("useCreateIndex",true);
 app.set("view engine", "ejs");
 router.use(layouts);
 
 router.use(methodOverride("_method",{methods: ["POST","GET"]}));
 
-router.use(express.static("public"))
+router.use(express.static("public")) ;
+router.use(expressValidator());
+
 app.use(
     express.urlencoded({
         extended: false
@@ -46,7 +48,7 @@ router.use(expressSession({
     resave: false,
     saveUninitialized: false
 }));
-
+router.use(connectFlash());
 router.use(passport.initialize());
 router.use(passport.session());
 passport.use(User.createStrategy());
@@ -55,7 +57,9 @@ passport.deserializeUser(User.deserializeUser);
 
 router.use((req,res,next)=>{
     res.locals.flashMessages = req.flash();
-
+    res.locals.loggedIn = req.isAuthenticated();
+    res.locals.currentUser = req.user;
+    next();
 })
 
 
@@ -80,7 +84,7 @@ router.get("/users/new", usersController.new);
 router.post("/users/create",usersController.validate, usersController.create, usersController.redirectView);
 router.get("/users/:id", usersController.show, usersController.showView);
 router.get("/users/:id/edit", usersController.edit);
-router.put("/users/:id/update", usersController.update,usersController.redirectView);
+router.put("/users/:id/update", usersController.validate, usersController.update,usersController.redirectView);
 router.delete("/users/:id/delete", usersController.delete, usersController.redirectView);
 
  router.get("/subscribers", subscribersController.index, subscribersController.indexView);
